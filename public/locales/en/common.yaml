@@ -37,6 +37,7 @@ menu:
 
 routes:
   map: "Map"
+  pets: "Pet Atlas"
   class: "Classes"
   crafting: "Crafting"
   enhancement: "Enhancement"
