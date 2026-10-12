@@ -170,6 +170,24 @@ body {
     border: 1px solid hsl(var(--heroui-default-200));
 }
 
+/* Pet Atlas map: theme-aware zoom controls */
+.dark .pet-map .leaflet-bar a,
+.abyss .pet-map .leaflet-bar a {
+    background: hsl(var(--heroui-content1));
+    color: hsl(var(--heroui-foreground));
+    border-bottom-color: hsl(var(--heroui-default-200));
+}
+
+.dark .pet-map .leaflet-bar a:hover,
+.abyss .pet-map .leaflet-bar a:hover {
+    background: hsl(var(--heroui-default-100));
+}
+
+.dark .pet-map .leaflet-bar,
+.abyss .pet-map .leaflet-bar {
+    border-color: hsl(var(--heroui-default-200));
+}
+
 .altcha {
     border: 0;
 }

@@ -59,7 +59,7 @@ const PetPins: React.FC<PinsProps> = ({data, spawnIndexes, selectedPetIndex, ran
         return `<b>${escapeHtml(pet.name)}</b><br>` +
           `<span style="opacity:.8">${pet.category} · Rank ${r(petIndex)} / target ${t}</span><br>` +
           `<span style="opacity:.8">${escapeHtml(m.name)} · Lv ${m.level}${zone ? ` · ${escapeHtml(zone.name)}` : ""}</span>`;
-      }, {direction: "top", offset: [0, -6]});
+      }, {direction: "top", offset: [0, -6], className: "game-marker-tooltip"});
       marker.on("click", (e) => {
         L.DomEvent.stopPropagation(e);
         latest.current.onSelectPet(petIndex === selectedPetIndex ? null : petIndex);
@@ -136,7 +136,7 @@ const PetMap: React.FC<Props> = ({data, zone, fitRequest, fitPoints, ...pinProps
       zoomSnap={0.25}
       zoomDelta={0.5}
       crs={L.CRS.Simple}
-      className="w-full h-full bg-[#0b141a]"
+      className="pet-map w-full h-full bg-[#0b141a]"
       attributionControl={false}
       preferCanvas
     >

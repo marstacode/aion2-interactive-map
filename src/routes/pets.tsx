@@ -12,6 +12,9 @@ import {
   type PetRanks,
 } from "@/types/pets.ts";
 import {STORAGE_PREFIX} from "@/constants.ts";
+import {useTheme} from "@/context/ThemeContext.tsx";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faMoon, faSun} from "@fortawesome/free-solid-svg-icons";
 
 const PROGRESS_STORAGE_KEY = `${STORAGE_PREFIX}.petAtlas.progress.v1`;
 const VIEW_STORAGE_KEY = `${STORAGE_PREFIX}.petAtlas.view.v1`;
@@ -106,6 +109,8 @@ function Page() {
   const [fitToSelected, setFitToSelected] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const {realTheme, setTheme} = useTheme();
+  const isDarkTheme = realTheme !== "light";
 
   useEffect(() => {
     fetch(getStaticUrl(`data/pets/atlas.json?build=${__BUILD_GIT_COMMIT__}`))
@@ -354,6 +359,16 @@ function Page() {
           </Tabs>
         </div>
         <div className="ml-auto flex gap-2">
+          <Button
+            size="sm"
+            variant="bordered"
+            isIconOnly
+            aria-label={isDarkTheme ? "Switch to light mode" : "Switch to dark mode"}
+            title={isDarkTheme ? "Switch to light mode" : "Switch to dark mode"}
+            onPress={() => setTheme(isDarkTheme ? "light" : "dark")}
+          >
+            <FontAwesomeIcon icon={isDarkTheme ? faSun : faMoon}/>
+          </Button>
           <Button size="sm" variant="bordered" onPress={exportProgress}>Export</Button>
           <Button size="sm" variant="bordered" onPress={() => fileInputRef.current?.click()}>Import</Button>
           <Button size="sm" variant="bordered" color="danger" onPress={resetProgress}>Reset</Button>
