@@ -23,11 +23,11 @@ type Progress = { target: number; ranks: PetRanks };
 type ViewState = {
   category: PetCategory | "";
   availability: Availability;
-  showCompleted: boolean;
+  hideCompleted: boolean;
   zone: number;
 };
 
-const DEFAULT_VIEW: ViewState = {category: "Cogni", availability: "all", showCompleted: true, zone: 0};
+const DEFAULT_VIEW: ViewState = {category: "Cogni", availability: "all", hideCompleted: false, zone: 0};
 
 function clampRank(n: unknown) {
   const v = Math.floor(Number(n));
@@ -172,17 +172,22 @@ function Page() {
     [view.category, view.availability, zoneIndex, query, monsterNames],
   );
 
+  const completedMatching = useMemo(
+    () => (data ? data.pets.filter((p) => matchesFilters(p) && isDone(p)).length : 0),
+    [data, matchesFilters, isDone],
+  );
+
   const listPets = useMemo(() => {
     if (!data) return [];
     return data.pets
       .map((p, index) => ({p, index}))
-      .filter(({p}) => matchesFilters(p) && (view.showCompleted || !isDone(p)))
+      .filter(({p}) => matchesFilters(p) && !(view.hideCompleted && isDone(p)))
       .sort((a, b) =>
         Number(isDone(a.p)) - Number(isDone(b.p)) ||
         Number(b.p.zones.includes(zoneIndex)) - Number(a.p.zones.includes(zoneIndex)) ||
         a.p.category.localeCompare(b.p.category) ||
         a.p.name.localeCompare(b.p.name));
-  }, [data, matchesFilters, view.showCompleted, isDone, zoneIndex]);
+  }, [data, matchesFilters, view.hideCompleted, isDone, zoneIndex]);
 
   // Pins: spawns in the current zone for pets that match the filters and are below target.
   const spawnIndexes = useMemo(() => {
@@ -369,7 +374,7 @@ function Page() {
       <div className="flex-1 min-h-0 flex flex-col md:flex-row">
         {/* Sidebar */}
         <aside className="flex min-h-0 h-[45%] md:h-auto w-full md:w-[400px] shrink-0 flex-col border-b md:border-b-0 md:border-r border-default-200">
-          <div className="grid grid-cols-[1fr_130px] gap-2 border-b border-default-200 p-3">
+          <div className="grid grid-cols-[1fr_150px] gap-2 border-b border-default-200 p-3">
             <Input
               size="sm"
               isClearable
@@ -406,14 +411,17 @@ function Page() {
             </Select>
             <Switch
               size="sm"
-              isSelected={view.showCompleted}
-              onValueChange={(on) => setView((v) => ({...v, showCompleted: on}))}
+              isSelected={view.hideCompleted}
+              onValueChange={(on) => setView((v) => ({...v, hideCompleted: on}))}
             >
-              <span className="text-xs">Completed</span>
+              <span className="whitespace-nowrap text-xs">Hide completed</span>
             </Switch>
             <div className="col-span-2 flex justify-between text-[11px] text-default-500">
-              <span>{listPets.length} shown</span>
-              <span>Click a pet to show its spawns · Esc to deselect</span>
+              <span>
+                {listPets.length} shown
+                {view.hideCompleted && completedMatching > 0 ? ` · ${completedMatching} completed hidden` : ""}
+              </span>
+              <span>Esc to deselect</span>
             </div>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto p-2">
