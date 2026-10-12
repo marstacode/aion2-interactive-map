@@ -122,6 +122,11 @@ function Page() {
       .catch((e) => setError(String(e)));
   }, []);
 
+  // Ask the browser not to evict this site's storage (progress lives in localStorage).
+  useEffect(() => {
+    navigator.storage?.persist?.().catch(() => {});
+  }, []);
+
   useEffect(() => writeJson(PROGRESS_STORAGE_KEY, progress), [progress]);
   useEffect(() => writeJson(VIEW_STORAGE_KEY, view), [view]);
 

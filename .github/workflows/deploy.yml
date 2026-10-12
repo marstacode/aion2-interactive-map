@@ -1,9 +1,7 @@
 name: Deploy to GitHub Pages
 
+# Manual-only: this copy is for private local use, so merging must not publish a public site.
 on:
-  push:
-    branches:
-      - master
   workflow_dispatch:
 
 permissions:
