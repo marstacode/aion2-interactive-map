@@ -10,16 +10,20 @@ type PinsProps = {
   data: PetAtlasData;
   spawnIndexes: number[];
   selectedPetIndex: number | null;
+  /** Pet indexes at or above the target rank; their pins draw greyed out. */
+  completedPets: Set<number>;
   rankOf: (petIndex: number) => number;
   target: number;
   onSelectPet: (petIndex: number | null) => void;
 };
 
+export const COMPLETED_PIN_COLOR = "#8b908d";
+
 function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]!));
 }
 
-const PetPins: React.FC<PinsProps> = ({data, spawnIndexes, selectedPetIndex, rankOf, target, onSelectPet}) => {
+const PetPins: React.FC<PinsProps> = ({data, spawnIndexes, selectedPetIndex, completedPets, rankOf, target, onSelectPet}) => {
   const map = useMap();
   const renderer = useMemo(() => L.canvas({padding: 0.5, tolerance: 4}), []);
   // Keep latest callbacks without rebuilding every pin.
@@ -33,25 +37,27 @@ const PetPins: React.FC<PinsProps> = ({data, spawnIndexes, selectedPetIndex, ran
     const hasSelection = selectedPetIndex != null;
     const zone = spawnIndexes.length ? data.meta.zones[data.spawns[spawnIndexes[0]][0]] : null;
 
-    // Draw dimmed pins first so the selected pet's pins sit on top.
-    const ordered = hasSelection
-      ? [...spawnIndexes].sort((a, b) =>
-        Number(data.spawns[a][1] === selectedPetIndex) - Number(data.spawns[b][1] === selectedPetIndex))
-      : spawnIndexes;
+    // Draw completed pins first, then missing ones, with the selected pet's pins on top.
+    const layerOf = (idx: number) => {
+      const petIndex = data.spawns[idx][1];
+      return petIndex === selectedPetIndex ? 2 : completedPets.has(petIndex) ? 0 : 1;
+    };
+    const ordered = [...spawnIndexes].sort((a, b) => layerOf(a) - layerOf(b));
 
     for (const idx of ordered) {
       const [, petIndex, x, y, monsterIndex] = data.spawns[idx];
       const pet = data.pets[petIndex];
       const hot = petIndex === selectedPetIndex;
-      const color = PET_CATEGORY_COLORS[pet.category];
+      const dim = hasSelection && !hot;
+      const greyed = completedPets.has(petIndex) && !hot;
       const marker = L.circleMarker([y, x], {
         renderer,
-        radius: hot ? 7 : 4.5,
+        radius: hot ? 7 : greyed ? 3.5 : 4.5,
         color: hot ? "#fff6c2" : "#0b1410",
         weight: hot ? 2 : 1,
-        fillColor: color,
-        fillOpacity: hasSelection && !hot ? 0.3 : 0.95,
-        opacity: hasSelection && !hot ? 0.3 : 1,
+        fillColor: greyed ? COMPLETED_PIN_COLOR : PET_CATEGORY_COLORS[pet.category],
+        fillOpacity: dim ? (greyed ? 0.15 : 0.3) : greyed ? 0.45 : 0.95,
+        opacity: dim ? 0.3 : greyed ? 0.5 : 1,
       });
       marker.bindTooltip(() => {
         const m = data.monsters[monsterIndex];
@@ -70,7 +76,7 @@ const PetPins: React.FC<PinsProps> = ({data, spawnIndexes, selectedPetIndex, ran
     return () => {
       map.removeLayer(group);
     };
-  }, [map, renderer, data, spawnIndexes, selectedPetIndex]);
+  }, [map, renderer, data, spawnIndexes, selectedPetIndex, completedPets]);
 
   // Click on empty map space clears the selection.
   useEffect(() => {

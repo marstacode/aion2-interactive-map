@@ -2,7 +2,7 @@ import {createFileRoute} from "@tanstack/react-router";
 import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {Button, Input, Select, SelectItem, Spinner, Switch, Tab, Tabs} from "@heroui/react";
 import {getStaticUrl} from "@/utils/url.ts";
-import PetMap from "@/components/Pets/PetMap.tsx";
+import PetMap, {COMPLETED_PIN_COLOR} from "@/components/Pets/PetMap.tsx";
 import {
   PET_CATEGORY_COLORS,
   PET_MAX_RANK,
@@ -199,22 +199,37 @@ function Page() {
         a.p.name.localeCompare(b.p.name));
   }, [data, matchesFilters, view.hideCompleted, isDone, zoneIndex]);
 
-  // Pins: spawns in the current zone for pets that match the filters and are below target.
+  const completedPets = useMemo(() => {
+    const out = new Set<number>();
+    data?.pets.forEach((p, i) => {
+      if (isDone(p)) out.add(i);
+    });
+    return out;
+  }, [data, isDone]);
+
+  // Pins: spawns in the current zone for pets that match the filters. Completed pets
+  // stay on the map (greyed) unless Hide completed is on.
   const spawnIndexes = useMemo(() => {
     if (!data) return [];
     const out: number[] = [];
     data.spawns.forEach((s, i) => {
       if (s[0] !== zoneIndex) return;
-      const p = data.pets[s[1]];
-      if (!isDone(p) && matchesFilters(p)) out.push(i);
+      if (view.hideCompleted && completedPets.has(s[1])) return;
+      if (matchesFilters(data.pets[s[1]])) out.push(i);
     });
     return out;
-  }, [data, zoneIndex, isDone, matchesFilters]);
+  }, [data, zoneIndex, completedPets, matchesFilters, view.hideCompleted]);
 
-  const missingPetsOnMap = useMemo(
-    () => (data ? new Set(spawnIndexes.map((i) => data.spawns[i][1])).size : 0),
-    [data, spawnIndexes],
-  );
+  const {missingPetsOnMap, completedPins} = useMemo(() => {
+    if (!data) return {missingPetsOnMap: 0, completedPins: 0};
+    const missing = new Set<number>();
+    let completed = 0;
+    for (const i of spawnIndexes) {
+      const petIndex = data.spawns[i][1];
+      if (completedPets.has(petIndex)) completed++; else missing.add(petIndex);
+    }
+    return {missingPetsOnMap: missing.size, completedPins: completed};
+  }, [data, spawnIndexes, completedPets]);
 
   const stats = useMemo(() => {
     if (!data) return null;
@@ -518,6 +533,7 @@ function Page() {
             </Tabs>
             <span className="text-xs text-default-500">
               {spawnIndexes.length.toLocaleString()} pins · {missingPetsOnMap} missing pets
+              {completedPins > 0 && ` · ${completedPins.toLocaleString()} completed pins greyed`}
             </span>
           </div>
           <div className="relative flex-1 min-h-0">
@@ -526,6 +542,7 @@ function Page() {
               zone={zone}
               spawnIndexes={spawnIndexes}
               selectedPetIndex={selectedPetIndex}
+              completedPets={completedPets}
               rankOf={rankOf}
               target={target}
               onSelectPet={setSelectedPetIndex}
@@ -536,6 +553,9 @@ function Page() {
               {data.meta.categories.map((c) => (
                 <span key={c} className="flex items-center gap-1"><CategoryDot category={c} size={8}/>{c}</span>
               ))}
+              <span className="flex items-center gap-1">
+                <span className="inline-block h-2 w-2 rounded-full" style={{background: COMPLETED_PIN_COLOR}}/>Completed
+              </span>
             </div>
             {toast && (
               <div className="absolute right-3 top-3 z-[1000] rounded-md bg-black/80 px-3 py-1.5 text-sm text-white shadow-lg">
@@ -564,7 +584,7 @@ function Page() {
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  {selectedPet.zones.includes(zoneIndex) && !isDone(selectedPet) && (
+                  {selectedPet.zones.includes(zoneIndex) && !(view.hideCompleted && isDone(selectedPet)) && (
                     <Button size="sm" variant="flat" onPress={() => focusPet(selectedPetIndex)}>Fit spawns</Button>
                   )}
                   {selectedPet.zones.filter((zi) => zi !== zoneIndex).map((zi) => (
@@ -591,7 +611,10 @@ function Page() {
               </>
             ) : (
               <div className="text-sm text-default-500">
-                Pick a pet from the list or click a pin. Pets at or above Rank {target} are hidden from the map.
+                Pick a pet from the list or click a pin.{" "}
+                {view.hideCompleted
+                  ? `Pets at or above Rank ${target} are hidden.`
+                  : `Pets at or above Rank ${target} show as grey pins; turn on Hide completed to remove them.`}
               </div>
             )}
           </div>
