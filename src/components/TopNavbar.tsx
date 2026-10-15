@@ -41,6 +41,7 @@ const TopNavbar: React.FC = () => {
 
   const routes = [
     {path: "/", name: "map"},
+    {path: "/pets", name: "pets"},
     {path: "/crafting", name: "crafting"},
     // {path: "/enhancement", name: "enhancement"},
     {path: "/character", name: "character"},

@@ -75,6 +75,7 @@ menu:
 
 routes:
   map: "地图"
+  pets: "宠物图鉴"
   class: "职业BD"
   crafting: "装备制作"
   enhancement: "装备强化"

@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PetsRouteImport } from './routes/pets'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as ForumRouteImport } from './routes/forum'
 import { Route as EnhancementRouteImport } from './routes/enhancement'
@@ -18,6 +19,11 @@ import { Route as CharacterRouteImport } from './routes/character'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LeaderboardArtifactsMatchingIdRouteImport } from './routes/leaderboard.artifacts.$matchingId'
 
+const PetsRoute = PetsRouteImport.update({
+  id: '/pets',
+  path: '/pets',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LeaderboardRoute = LeaderboardRouteImport.update({
   id: '/leaderboard',
   path: '/leaderboard',
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/enhancement': typeof EnhancementRoute
   '/forum': typeof ForumRoute
   '/leaderboard': typeof LeaderboardRouteWithChildren
+  '/pets': typeof PetsRoute
   '/leaderboard/artifacts/$matchingId': typeof LeaderboardArtifactsMatchingIdRoute
 }
 export interface FileRoutesByTo {
@@ -78,6 +85,7 @@ export interface FileRoutesByTo {
   '/enhancement': typeof EnhancementRoute
   '/forum': typeof ForumRoute
   '/leaderboard': typeof LeaderboardRouteWithChildren
+  '/pets': typeof PetsRoute
   '/leaderboard/artifacts/$matchingId': typeof LeaderboardArtifactsMatchingIdRoute
 }
 export interface FileRoutesById {
@@ -89,6 +97,7 @@ export interface FileRoutesById {
   '/enhancement': typeof EnhancementRoute
   '/forum': typeof ForumRoute
   '/leaderboard': typeof LeaderboardRouteWithChildren
+  '/pets': typeof PetsRoute
   '/leaderboard/artifacts/$matchingId': typeof LeaderboardArtifactsMatchingIdRoute
 }
 export interface FileRouteTypes {
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
     | '/enhancement'
     | '/forum'
     | '/leaderboard'
+    | '/pets'
     | '/leaderboard/artifacts/$matchingId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/enhancement'
     | '/forum'
     | '/leaderboard'
+    | '/pets'
     | '/leaderboard/artifacts/$matchingId'
   id:
     | '__root__'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '/enhancement'
     | '/forum'
     | '/leaderboard'
+    | '/pets'
     | '/leaderboard/artifacts/$matchingId'
   fileRoutesById: FileRoutesById
 }
@@ -132,10 +144,18 @@ export interface RootRouteChildren {
   EnhancementRoute: typeof EnhancementRoute
   ForumRoute: typeof ForumRoute
   LeaderboardRoute: typeof LeaderboardRouteWithChildren
+  PetsRoute: typeof PetsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/pets': {
+      id: '/pets'
+      path: '/pets'
+      fullPath: '/pets'
+      preLoaderRoute: typeof PetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/leaderboard': {
       id: '/leaderboard'
       path: '/leaderboard'
@@ -215,6 +235,7 @@ const rootRouteChildren: RootRouteChildren = {
   EnhancementRoute: EnhancementRoute,
   ForumRoute: ForumRoute,
   LeaderboardRoute: LeaderboardRouteWithChildren,
+  PetsRoute: PetsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
